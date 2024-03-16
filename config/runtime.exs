@@ -115,3 +115,26 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
+
+if config_env() == :docker do
+  maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+
+  config :hello, Hello.Repo,
+         # ssl: true,
+         username: "postgres",
+         password: "postgres",
+         hostname: "db",
+         database: "hello_dev",
+         pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+         socket_options: maybe_ipv6
+
+  config :hello, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+
+  config :hello, HelloWeb.Endpoint,
+         http: [
+           ip: {0, 0, 0, 0, 0, 0, 0, 0},
+           port: String.to_integer(System.get_env("PORT") || "4000")
+         ],
+         debug_errors: true,
+         secret_key_base: "InVmJqZ6i+91kgd54F3Feyl9LOHFhj73aIStDXTnC3HeEChJNt8JfuCodclXTBEE"
+end
